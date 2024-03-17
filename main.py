@@ -3,7 +3,10 @@ from database_manager import DatabaseManager
 
 
 def main():
-    db_manager = DatabaseManager()
+    # Create your database manager object with your own information
+    db_manager = DatabaseManager(user='your_username', password='your_password',
+                                 host='your_host', database='your_database')
+
     user_interaction = UserInteraction(db_manager)
 
     user_input = ""

@@ -3,16 +3,20 @@ from mysql.connector import errorcode
 
 
 class DatabaseManager:
-    def __init__(self):
+    def __init__(self, user, password, host, database):
+        self.user = user
+        self.password = password
+        self.host = host
+        self.database = database
         self.connection = None
 
     def connect(self):
         try:
             self.connection = mysql.connector.connect(
-                user='CS509',
-                password='CS509',
-                host='127.0.0.1',
-                database='demo509'
+                user=self.user,
+                password=self.password,
+                host=self.host,
+                database=self.database
             )
         except mysql.connector.Error as err:
             if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
