@@ -4,15 +4,27 @@ import mysql.connector
 
 class UserInteraction:
     def __init__(self, db):
+        """
+        Initialize the UserInteraction object.
+
+        Args:
+            db: DatabaseManager object used for database interaction.
+        """
         self.db = db
 
     def show_users_basic(self):
         """
-        OPTION 1 FUNCTION: Show Users (Basic)
+        Display basic information about users.
+
+        Retrieves basic information about users from the database
+        and displays it in tabular format using the tabulate library.
+
+        Raises:
+            mysql.connector.Error: If an error occurs while executing the SQL query.
         """
+        self.db.connect()
+        cursor = self.db.connection.cursor()
         try:
-            self.db.connect()
-            cursor = self.db.connection.cursor()
             cursor.execute("SELECT * FROM UserTableView")
             column_names = [i[0] for i in cursor.description]
             data = cursor.fetchall()
@@ -20,119 +32,79 @@ class UserInteraction:
         except mysql.connector.Error as err:
             print("Error occurred:", err)
         finally:
-            if cursor:
-                cursor.close()
+            cursor.close()
             self.db.disconnect()
 
     def show_users_admin(self):
         """
-        OPTION 2 FUNCTION: Show Users (Admin)
+        Display detailed information about users (admin only).
+
+        Retrieves detailed information about all users from the database
+        and displays it in tabular format using the tabulate library.
+
+        Raises:
+            mysql.connector.Error: If an error occurs while executing the SQL query.
         """
+        self.db.connect()
+        cursor = self.db.connection.cursor()
         try:
-            self.db.connect()
-            cursor = self.db.connection.cursor()
-            cursor.execute("SELECT * FROM UserTable") # Query: Selecting all columns from the UserTable
-            column_names = [i[0] for i in cursor.description]
-            data = cursor.fetchall()
-            print(tabulate.tabulate(data, headers=column_names))
+            cursor.execute("SELECT * FROM UserTable")  # Query: Selecting all columns from the UserTable
+            column_names = [i[0] for i in cursor.description]  # Getting the column names
+            data = cursor.fetchall()  # Getting the data from the VIEW - UserTableView
+            print(tabulate.tabulate(data, headers=column_names))  # Print the data in a table format using tabulate
         except mysql.connector.Error as err:
             print("Error occurred:", err)
         finally:
-            if cursor:
-                cursor.close()
+            cursor.close()
             self.db.disconnect()
-
-
-
-        # self.db.connect()
-        #
-        # if self.db.connection:
-        #     user_query = "SELECT * FROM UserTable"  # Query: Selecting all columns from the UserTable
-        #
-        #     # Operation 2: Display all users, admin
-        #     user_cursor = self.db.connection.cursor()
-        #
-        #     user_cursor.execute(user_query)  # Executing the query
-        #
-        #     # Getting the column names
-        #     column_names = [i[0] for i in user_cursor.description]
-        #
-        #     # Getting the data from the VIEW - UserTableView
-        #     data = user_cursor.fetchall()
-        #
-        #     # Print the data in a table format using tabulate import
-        #     print(tabulate.tabulate(data, headers=column_names))
-        #
-        #     user_cursor.close()
-        #
-        # self.db.disconnect()
 
     def query_user_admin(self):
         """
-        OPTION 3 FUNCTION: Query One User (admin)
+        Query detailed information about a specific user (admin only).
+
+        Prompts the user to enter a username, then retrieves detailed
+        information about that user from the database and displays it
+        in tabular format using the tabulate library.
+
+        Raises:
+            mysql.connector.Error: If an error occurs while executing the SQL query.
         """
+        print("Okay, let's find a user for you.")
+        username = input("What is the username of the user you are searching for?: ")
+        print("\nSearching...\n\n")
+
+        self.db.connect()
+        cursor = self.db.connection.cursor()
+
+        user_query = "SELECT FirstName, LastName, UserName, AES_DECRYPT(Password, 'encryption_key'), JobTitle " \
+                     "FROM UserTable WHERE UserName = %s"
+
         try:
-            self.db.connect()
-
-            print("Okay, let's find a user for you.")
-            username = input("What is the username of the user you are searching for?: ")
-            print("\nSearching...\n\n")
-
-            cursor = self.db.connection.cursor()
-            user_query = "SELECT FirstName, LastName, UserName, AES_DECRYPT(Password, 'encryption_key'), JobTitle " \
-                         "FROM UserTable WHERE UserName = %s"
-            cursor.execute(user_query, (username,))
-            data = cursor.fetchall()
-            column_names = [i[0] for i in cursor.description]
+            cursor.execute(user_query, (username,))  # Executing the query
+            data = cursor.fetchall()  # Getting the data from the VIEW - UserTableView
+            column_names = [i[0] for i in cursor.description]   # Getting the column names
             if len(data) == 0:
                 print("\nSorry, there was no user found with that username.")
             else:
-                print(tabulate.tabulate(data, headers=column_names))
+                print(tabulate.tabulate(data, headers=column_names))  # Print the data in a table format
         except mysql.connector.Error as err:
             print("Error occurred:", err)
         finally:
-            if cursor:
-                cursor.close()
+            cursor.close()
             self.db.disconnect()
-
-
-        # self.db.connect()
-        #
-        # print("Okay, let's find a user for you.")
-        # username = input("What is the username of the user you are searching for?: ")
-        # print("\nSearching...\n\n")
-        #
-        # if self.db.connection:
-        #     # Query: Selecting all columns from the UserTable
-        #     user_query = "SELECT FirstName, LastName, UserName, AES_DECRYPT(Password, 'encryption_key'), "
-        #     user_query += "JobTitle FROM UserTable WHERE UserName = %s;"
-        #
-        #     try:
-        #         # Operation 3: Display one user, admin
-        #         user_cursor = self.db.connection.cursor()
-        #         user_cursor.execute(user_query, (username,))  # Executing the query
-        #
-        #         # Getting the column names
-        #         column_names = [i[0] for i in user_cursor.description]
-        #
-        #         # Getting the data from the VIEW - UserTableView
-        #         data = user_cursor.fetchall()
-        #
-        #         if len(data) == 0:
-        #             print("\nSorry, there was no user found with that username.")
-        #         else:
-        #             # Print the data in a table format using tabulate import
-        #             print(tabulate.tabulate(data, headers=column_names))
-        #
-        #         user_cursor.close()
-        #     except self.db.connector.Error as err:
-        #         print(f"Error querying user data: {err}")
-        #
-        # self.db.disconnect()
 
     def _create_username(self, firstname: str, lastname: str) -> str:
         """
-        FUNCTION used in OPTION 4 - ADD USER: creates unique username
+        Create a unique username for a new user.
+
+        Generates a unique username based on the user's first name and last name.
+
+        Args:
+            firstname: The first name of the user.
+            lastname: The last name of the user.
+
+        Returns:
+            A unique username for the new user.
         """
         attempt = firstname[0].lower() + lastname.lower()
         username = attempt
@@ -159,7 +131,14 @@ class UserInteraction:
 
     def add_user(self):
         """
-        OPTION 4 FUNCTION: Add New User
+        Add a new user to the database.
+
+        Prompts the user to enter details for a new user (first name, last name,
+        job title, and password), generates a unique username, and adds the
+        user to the database.
+
+        Raises:
+            mysql.connector.Error: If an error occurs while executing the SQL query.
         """
         print("Okay, let's add a new user!\nPlease input the following information.")
 
@@ -192,7 +171,13 @@ class UserInteraction:
 
     def _user_exists(self, username: str) -> bool:
         """
-        FUNCTION used in OPTION 5 - DELETE USER: checks to make sure there is a user with given username
+        Checks if a user with the specified username exists in the database.
+
+        Args:
+            username: The username to check.
+
+        Returns:
+            True if the user exists, False otherwise.
         """
         self.db.connect()
         cursor = self.db.connection.cursor()
@@ -205,7 +190,7 @@ class UserInteraction:
             cursor.execute(user_query, (username,))
             data = cursor.fetchall()
         except self.db.connector.Error as err:
-            print(f"Error in query searching for username: (err)")
+            print(f"Error in query searching for username: {err}")
         else:
             if len(data) == 0:
                 return False
@@ -217,7 +202,13 @@ class UserInteraction:
 
     def delete_user(self):
         """
-        OPTION 5 FUNCTION: Delete User
+        Delete a user from the database.
+
+        Prompts the user to enter the username of the user to delete,
+        verifies the username, and deletes the user from the database.
+
+        Raises:
+            mysql.connector.Error: If an error occurs while executing the SQL query.
         """
         print("Okay, let's delete a user.")
         username = input("What user would you like to delete?\nUsername: ")
@@ -244,13 +235,22 @@ class UserInteraction:
                     user_cursor.close()
                     self.db.disconnect()
             else:
-                print("\nOkay, we'll go back to the main menu.\n") # Cancel deletion process
+                print("\nOkay, we'll go back to the main menu.\n")  # Cancel deletion process
         else:
             print("\nError. Username does not exist.\n")
 
     def _check_password(self, username: str, cur_pass: str) -> bool:
         """
-        FUNCTION used in OPTION 6 - UPDATE PASSWORD: Checks to make sure given password is same as current password
+        Checks if the entered password matches the current password
+        for the specified user in the database.
+
+        Args:
+            username: The username of the user.
+            cur_pass: The entered password.
+
+        Returns:
+            True if the entered password matches the current password,
+            False otherwise.
         """
         self.db.connect()
         cursor = self.db.connection.cursor()
@@ -276,7 +276,14 @@ class UserInteraction:
 
     def update_password(self):
         """
-        OPTION 6 FUNCTION: Update Password
+         Update a user's password in the database.
+
+        Prompts the user to enter the username and current password
+        for the user whose password should be updated, verifies the
+        current password, and updates the password in the database.
+
+        Raises:
+            mysql.connector.Error: If an error occurs while executing the SQL query.
         """
         print("Okay, let's update a password!")
         username = input("What user would you like to change a password for?\nUsername: ")
@@ -312,4 +319,3 @@ class UserInteraction:
                 cur_pass = input("Current Password: ")
                 if cur_pass == 'BACK':
                     still_attempting = False
-
